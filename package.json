@@ -19,6 +19,8 @@
     "vite": "^4.0.0"
   },
   "dependencies": {
-    "firebase": "^9.20.0"
+    "firebase": "^9.20.0",
+    "sass": "^1.62.1",
+    "svelte-routing": "^1.6.0"
   }
 }

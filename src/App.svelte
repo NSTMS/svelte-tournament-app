@@ -1,35 +1,17 @@
 <script lang="ts">
-  import { onMount } from "svelte";
-  import { db } from "./static/firebase";
-  import { QueryDocumentSnapshot, collection, getDocs } from "firebase/firestore";
-  import { writable, type Writable } from "svelte/store";
-  import type { Player } from "./static/types";
-
- const Players : Writable<Player[]> = writable([])
-  onMount(()=>{
-      loadDocs()
+    import { Router, Link, Route } from "svelte-routing";
+    import PlayersView from "./components/PlayersView.svelte";
+    import TournamentHallView from "./components/TournamentHallView.svelte";
+    import AddPlayerView from "./components/AddPlayerView.svelte";
+    import { onMount } from "svelte";
+    import "./static/styles/style.scss"
+    onMount(()=>{
+      const correct_routes = ["/","/tournament","/add"]
+      if(!correct_routes.includes(window.location.pathname)) window.location.replace('/')
     })
-
-    const loadDocs = () =>{
-      getDocs(collection(db,'tasks')).then((snap)=>{
-        const data: Player[] = snap.docs.map((doc: QueryDocumentSnapshot<Player>)=>{
-          return {
-            id: doc.id,
-            name : doc.data().name, 
-            surname : doc.data().surname,
-            city : doc.data().city,
-            age : doc.data().age,
-            registerDate : doc.data().registerDate,
-            isEdit : false
-          }
-        })
-        Players.set(data)
-      })
-    }
-    
 </script>
-
-<main>        
-  {#each $Players as player}
-  {/each}
-</main>
+<Router>
+      <Route exact path={"/"}><PlayersView /></Route>  
+      <Route exact path={"/tournament"}><TournamentHallView /></Route>  
+      <Route exact path={"/add"}><AddPlayerView /></Route>  
+</Router>
