@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import { link } from "svelte-routing";
   import { Players } from "../static/store";
-  import { getAllData } from "../functions/getAllData";
+  import { getAllData,createTournament } from "../functions/functions";
 
   import Player from "./Player.svelte";
   import EditingPlayer from "./EditingPlayer.svelte";
@@ -12,6 +12,7 @@
     await getAllData().then(() => {
       isLoading = false;
     });
+    createTournament()
   });
 </script>
 
@@ -33,11 +34,13 @@
       {#await player}
         <p>Loading player data...</p>
       {:then playerData}
+      {#if playerData.status == 0}
         {#if playerData.isEditing}
           <EditingPlayer player={playerData} />
         {:else}
           <Player player={playerData} />
         {/if}
+      {/if}
       {/await}
     {/each}
   </table>

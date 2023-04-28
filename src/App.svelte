@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Router, Link, Route } from "svelte-routing";
+    import { Router,Route } from "svelte-routing";
     import PlayersView from "./components/PlayersView.svelte";
     import TournamentHallView from "./components/TournamentHallView.svelte";
     import AddPlayerView from "./components/AddPlayerView.svelte";

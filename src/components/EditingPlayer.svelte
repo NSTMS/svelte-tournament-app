@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { PlayerType } from "../static/types";
     export let player : PlayerType;
-    import { changePlayersEditingStatus, updatePlayer,getAllData } from "../functions/functions";
+    import { changePlayersEditingStatus, updatePlayer,getAllData,getPlayer } from "../functions/functions";
 
     let name : string = player.name
     let surname : string = player.surname
@@ -12,15 +12,16 @@
         changePlayersEditingStatus(player.id)
     }
     const handleSubmitClick = async () =>{
+        const restorePlayer = await getPlayer(player.id)
         await updatePlayer(player.id, {
+            ...restorePlayer,
             name : name,
             surname : surname, 
             age : age, 
             city : city
-        }).then(()=>{
-            changePlayersEditingStatus(player.id)
-            getAllData()
         })
+        changePlayersEditingStatus(player.id)
+        getAllData()
     }
 
 </script>
@@ -32,6 +33,6 @@
     <td><input type="text" bind:value={surname}></td>
     <td><input type="number" bind:value={age}></td>
     <td><input type="text" bind:value={city}></td>
-    <td><button on:click={handleSubmitClick} class="button sumbit-button">sumbit</button></td>
+    <td><button on:click={handleSubmitClick} class="button submit-button">submit</button></td>
     <td><button on:click={handleCancelClick} class="button cancel-button"> x </button></td>
 </tr>

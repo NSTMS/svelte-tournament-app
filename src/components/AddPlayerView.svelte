@@ -28,4 +28,4 @@
 <td><input type="text" bind:value={surname} placeholder="surname"></td>
 <td><input type="number" bind:value={age} placeholder="age"></td>
 <td><input type="text" bind:value={city} placeholder="city"></td>
-<td><button on:click={handleSubmitClick} class="button sumbit-button">sumbit</button></td>
+<td><button on:click={handleSubmitClick} class="button submit-button">submit</button></td>
