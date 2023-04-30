@@ -1,4 +1,4 @@
-import type { PlayerStatus } from "./enums"
+import type { PlayerStatus, TournamentStatus } from "./enums"
 export type PlayerType = {
     id: string,
     name : string, 
@@ -7,9 +7,9 @@ export type PlayerType = {
     age : number,
     registerDate : number,
     status: PlayerStatus,
-    isEditing? : boolean
+    isEditing? : boolean,
+    score : number
 }
-
 
 export type PlayerToAddType = {
     name : string, 
@@ -18,8 +18,21 @@ export type PlayerToAddType = {
     age : number,
 }
 
+export type TournamentType = {
+    name : string,
+    status: TournamentStatus,
+    numberOfRounds : number,
+    numberOfPlayers : number,
+    rounds : Array<Array<TournamentPair>>,
+    overallScore : number,
+    winPrize :  number,
+    winner: string,
+    currentRound : number,
+}
+
 export type TournamentPair = {
     round : number,
-    player_1 : string,
-    player_2 : string,
+    players : PlayerType[]
 }
+
+

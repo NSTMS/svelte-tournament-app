@@ -2,17 +2,15 @@
   import { onMount } from "svelte";
   import { link } from "svelte-routing";
   import { Players } from "../static/store";
-  import { getAllData,createTournament } from "../functions/functions";
+  import { getAllData } from "../functions/functions";
 
   import Player from "./Player.svelte";
   import EditingPlayer from "./EditingPlayer.svelte";
   let isLoading: boolean = true;
 
   onMount(async () => {
-    await getAllData().then(() => {
-      isLoading = false;
-    });
-    createTournament()
+    await getAllData()
+    isLoading = false;
   });
 </script>
 
