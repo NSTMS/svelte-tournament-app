@@ -4,21 +4,19 @@ import {get} from "svelte/store"
 import type { PlayerType, TournamentPair } from "../static/types";
 import { TournamentStatus } from "../static/enums";
 import { TournamentPairs,Tournament } from "../static/store";
-import type TournamentHallView from "../components/TournamentHallView.svelte";
 let playersWaitingForFirstGame : PlayerType[] = []
 export const createTournament =async (name : string, winPrize : number ) =>{
     await getAllData()
     playersWaitingForFirstGame = get(Players)
     TournamentPairs.set(shuffle(get(Players)))
-    const q : number = numerOfPlayers()
+    const q : number = get(Players).length
     let rounds = []
-
     let numberOfRounds : number = Math.ceil(Math.log2(q))
 
     let closestPowerOfTwo : number = Math.pow(2, Math.ceil(Math.log2(q)))
     let playersInFirstRound : number = closestPowerOfTwo - 2*(closestPowerOfTwo-q)
 
-    let iterator =  Math.pow(2, Math.ceil(Math.log2(q)-1))
+    let iterator = Math.pow(2, Math.ceil(Math.log2(q)-1))
     for(let i=0;i<numberOfRounds;i++) 
     {
         rounds.push([])
@@ -64,55 +62,55 @@ export const createTournament =async (name : string, winPrize : number ) =>{
         currentRound : 0,
     })
     
-    console.log("Ilu graczy: ", q)
-    console.log("Ile rund: ", numberOfRounds)
-    console.log("Najbliższa potęga 2: ", closestPowerOfTwo)
-    console.log("Ilu graczy w eliminacjach: ", playersInFirstRound)      
+    // console.log("Ilu graczy: ", q)
+    // console.log("Ile rund: ", numberOfRounds)
+    // console.log("Najbliższa potęga 2: ", closestPowerOfTwo)
+    // console.log("Ilu graczy w eliminacjach: ", playersInFirstRound)      
+    // console.log("Drzewko: ", get(Tournament).rounds)
+}
+
+const getWinnerFromPair = (players :  PlayerType[]) =>{
+    if(players[0].score == players[1].score) return null; // handle draw?
+    else if(players[0].score > players[1].score) return players[0]
+    else return players[1]
 }
 
 export const changeTournamentRound = () =>{
-    if(get(Tournament).currentRound == 1) Tournament.update(tournament => ({...tournament, status : TournamentStatus.InProgress }));
-
-    let round = get(Tournament).rounds[get(Tournament).currentRound]
-    
-    round.forEach((r : Array<TournamentPair>) =>{
-        r.forEach((rr : TournamentPair) =>{
-            let bestPlayer : PlayerType = null
-            let bestScore : number = 0
-            rr.players.forEach((s : PlayerType) => {
-                if(s.score >= bestScore) 
-                {
-                    bestScore = s.score
-                    bestPlayer = s
-                }
-            })
-            let blankFieldsInNextRound = get(Tournament).rounds[get(Tournament).currentRound+1]
-        
-            blankFieldsInNextRound.forEach((r : Array<TournamentPair>) =>{
-                r.forEach((rr : TournamentPair) =>{
-                    rr.players.forEach((s : PlayerType) => {
-                        if(s == undefined)
-                        {
-                            s = bestPlayer
-                            let rounds = get(Tournament).rounds
-                            rounds[get(Tournament).currentRound+1] =blankFieldsInNextRound
-                            Tournament.update(tournament => ({...tournament, rounds: rounds }));
-                        }
-                    })
-                })
-            })
-        })
-    })
-
-    
-
-    Tournament.update(tournament => ({ ...tournament, currentRound: tournament.currentRound + 1 }));
-    if(get(Tournament).currentRound >= get(Tournament).numberOfRounds){
-
-        const winner = get(Players)[Math.floor(Math.random()* get(Players).length)]
-        console.log(winner)
+    const currentRound : number = get(Tournament).currentRound
+    Tournament.update(tournament => ({...tournament, status : TournamentStatus.InProgress }));
+    if(currentRound == get(Tournament).numberOfRounds-1)
+    {
+        const winner = getWinnerFromPair(get(Tournament).rounds[get(Tournament).currentRound][0][0].players)
         Tournament.update(tournament => ({...tournament, status : TournamentStatus.Finished, winner : winner.id }));
-    }
+        return;
+    } 
+    
+    const gamesInCurrentRound  : TournamentPair[][] = get(Tournament).rounds[currentRound]
+    let roundWinners : PlayerType[] = []
+        gamesInCurrentRound.forEach((matches: TournamentPair[]) => {
+        matches.forEach((match: TournamentPair) => {
+            const winner = getWinnerFromPair(match.players)
+            if(winner == null) Tournament.update(tournament => ({ ...tournament, status : TournamentStatus.IncorrectlyFilled }));
+            else roundWinners.push(getWinnerFromPair(match.players))
+        });
+    });      
+
+    if(get(Tournament).status == TournamentStatus.IncorrectlyFilled) return;
+    
+    let gamesInNextRound : TournamentPair[][] = get(Tournament).rounds[currentRound+1]
+    gamesInNextRound.forEach((matches: TournamentPair[]) => {
+        matches.forEach((match: TournamentPair) => {
+          match.players.forEach((player: PlayerType, index: number) => {
+            if (!player) {
+              match.players[index] = {...roundWinners.shift(),  score: 0};
+            }
+          });
+        });
+      });
+      
+    let rounds = get(Tournament).rounds
+    rounds[currentRound + 1] = [...gamesInNextRound]    
+    Tournament.update(tournament => ({ ...tournament, currentRound: tournament.currentRound + 1, rounds }));
 }
 
 const drawAndRemoveFromWaitingPlayers = () : PlayerType =>{
@@ -133,10 +131,6 @@ const shuffle = (arr: PlayerType[]) : PlayerType[] =>{
     for (let i = 0; i < n; i++) 
         swap(shuffled, i, Math.floor(Math.random() * n));
     return shuffled;
-}
-
-const numerOfPlayers = (): number  => {
-    return get(Players).length
 }
 
 export const getPlayerById = (id : string) : string =>{

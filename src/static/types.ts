@@ -23,7 +23,7 @@ export type TournamentType = {
     status: TournamentStatus,
     numberOfRounds : number,
     numberOfPlayers : number,
-    rounds : Array<Array<TournamentPair>>,
+    rounds : TournamentPair[][][],
     overallScore : number,
     winPrize :  number,
     winner: string,
