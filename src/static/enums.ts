@@ -3,5 +3,5 @@ export enum PlayerStatus {
 }
 
 export enum TournamentStatus {
-    Created="Nie rozpoczęto",InProgress="W trakcie", IncorrectlyFilled="Uzupełnij wszystkie pola",Finished="Zakończono",
+    Created="Turniej utworzony",InProgress="W trakcie", IncorrectlyFilled="Uzupełnij wszystkie pola",Finished="Zakończono",
 }

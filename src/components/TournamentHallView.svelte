@@ -1,60 +1,82 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { createTournament,changeTournamentRound,getPlayerById } from "../functions/functions";
+  import { createTournament,changeTournamentRound,getPlayerById, getTournament } from "../functions/functions";
   import { Tournament } from "../static/store";
   import { link } from "svelte-routing";
-  let isLoading = true;
+  let isLoading : boolean = true;
+  let isStarted : boolean = false;
+
   onMount(async () => {
-    await createTournament("nowy", 10000);
-    isLoading = false;
+    setTimeout(async ()=>{
+      let c: boolean = confirm("czy chesz załadować istniejący turniej?")
+      if(c)
+      {
+        isLoading = true;
+        await getTournament()
+        isLoading = false;
+        isStarted = true;
+      }
+    })
   });
 
-  const handleRoundSubmit = () =>{
-    changeTournamentRound()
+  const startTournament = async () =>{
+    let data = prompt("Podaj nazwę turnieju: ")
+    if(!data) return;
+    isStarted = true;
+    isLoading = true;
+    await createTournament(data, 10000);
+    isLoading = false;
+  }
+  const handleRoundSubmit = async () =>{
+    await changeTournamentRound()
   }
 
 </script>
 
 <a class="link add-button" href="/" use:link>back to main page</a>
-
-{#if isLoading}
-<p>Loading data...</p>
-{:else}
-{#key $Tournament}
-  <h1>{$Tournament.name}</h1>
-  <h2>{$Tournament.status}</h2>
-  <main class="tournament-view" style="--columns:{$Tournament.rounds.length};">
-      {#each $Tournament.rounds as round,i}
-        <div class="round-games">
-          {#each round as game}
-            <div class="tournament-game">
-              <h2>{game[0].round}</h2>
-              <div class="tournament-game-players">
-                {#each game[0].players as player}
-                {#if player}
-                <div class="member">
-                  <span>{player.name} {player.surname}</span>
-                  <input type="number" name="score"  min="0"  id="score" disabled={$Tournament.currentRound !== i} bind:value={player.score}/>
-                </div>
-                {:else}
+<button on:click={startTournament}>start the tournament</button>
+{#if isStarted}
+  {#if isLoading}
+  <p>Loading data...</p>
+  {:else}
+  {#key $Tournament}
+    <h1>{$Tournament.name}</h1>
+    <h2>{$Tournament.status}</h2>
+    <main class="tournament-view" style="--columns:{$Tournament.rounds.length};">
+        {#each $Tournament.rounds as round,i}
+          <div class="round-games">
+            {#each round as game}
+              <div class="tournament-game">
+                <h2>{game[0].round}</h2>
+                <div class="tournament-game-players">
+                  {#each game[0].players as player}
+                  {#if player}
                   <div class="member">
-                      <input type="number" disabled>
-                  </div>  
-                {/if}
-                  {/each}
-              </div>
+                    <span>{player.name} {player.surname}</span>
+                    <input type="number" name="score"  min="0"  id="score" disabled={$Tournament.currentRound !== i} bind:value={player.score}/>
+                  </div>
+                  {:else}
+                    <div class="member">
+                        <input type="number" disabled>
+                    </div>  
+                  {/if}
+                    {/each}
+                </div>
+            </div>
+            {/each}
+            {#if $Tournament.currentRound == i}
+                <button on:click={handleRoundSubmit}>submit round {i+1}</button>
+            {/if}
           </div>
-          {/each}
-          {#if $Tournament.currentRound == i}
-              <button on:click={handleRoundSubmit}>submit round {i+1}</button>
-          {/if}
-        </div>
-      {/each}
-  </main>
-  {#if getPlayerById($Tournament.winner)}
-    <h2>winner : {getPlayerById($Tournament.winner)}</h2>
+        {/each}
+    </main>
+    {#if getPlayerById($Tournament.winner)}
+      <h2>winner : {getPlayerById($Tournament.winner)}</h2>
+    {/if}
+  {/key}
   {/if}
-{/key}
+  {:else}
+  <h2>nie rozpoczęto</h2>
 {/if}
 
 <style>

@@ -26,6 +26,7 @@ export type TournamentType = {
     rounds : TournamentPair[][][],
     overallScore : number,
     winPrize :  number,
+    players : PlayerType[],
     winner: string,
     currentRound : number,
 }

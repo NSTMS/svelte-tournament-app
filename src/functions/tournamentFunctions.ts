@@ -1,11 +1,13 @@
 import { getAllData } from "./getAllData"
-import { Players } from "../static/store";
 import {get} from "svelte/store"
-import type { PlayerType, TournamentPair } from "../static/types";
+import type { PlayerType, TournamentPair, TournamentType } from "../static/types";
 import { TournamentStatus } from "../static/enums";
-import { TournamentPairs,Tournament } from "../static/store";
+import {Players, TournamentPairs,Tournament } from "../static/store";
+import { QueryDocumentSnapshot, collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
+import { db } from "../static/firebase";
+
 let playersWaitingForFirstGame : PlayerType[] = []
-export const createTournament =async (name : string, winPrize : number ) =>{
+export const createTournament = async (name : string, winPrize : number ) =>{
     await getAllData()
     playersWaitingForFirstGame = get(Players)
     TournamentPairs.set(shuffle(get(Players)))
@@ -59,14 +61,10 @@ export const createTournament =async (name : string, winPrize : number ) =>{
         overallScore : 0,
         winPrize :  winPrize,
         winner : null,
+        players : get(Players),
         currentRound : 0,
     })
-    
-    // console.log("Ilu graczy: ", q)
-    // console.log("Ile rund: ", numberOfRounds)
-    // console.log("Najbliższa potęga 2: ", closestPowerOfTwo)
-    // console.log("Ilu graczy w eliminacjach: ", playersInFirstRound)      
-    // console.log("Drzewko: ", get(Tournament).rounds)
+    await saveTournament()
 }
 
 const getWinnerFromPair = (players :  PlayerType[]) =>{
@@ -75,7 +73,7 @@ const getWinnerFromPair = (players :  PlayerType[]) =>{
     else return players[1]
 }
 
-export const changeTournamentRound = () =>{
+export const changeTournamentRound = async () =>{
     const currentRound : number = get(Tournament).currentRound
     Tournament.update(tournament => ({...tournament, status : TournamentStatus.InProgress }));
     if(currentRound == get(Tournament).numberOfRounds-1)
@@ -111,6 +109,29 @@ export const changeTournamentRound = () =>{
     let rounds = get(Tournament).rounds
     rounds[currentRound + 1] = [...gamesInNextRound]    
     Tournament.update(tournament => ({ ...tournament, currentRound: tournament.currentRound + 1, rounds }));
+    await saveTournament()
+}
+
+
+export const saveTournament = async () =>{
+    await setDoc(doc(db, "tournament", "tournament"),{
+        ... get(Tournament), rounds: JSON.stringify(get(Tournament).rounds), players : JSON.stringify(get(Players)),
+    }).catch((error)=>{
+        console.error("Error updating document: ", error);
+    })
+    await getTournament()
+} 
+export const getTournament = async () =>{
+    // dodaj sprawdzanie czy gracze zgadzają się
+
+    const docRef = doc(db, "tournament", "tournament");
+    const docSnap = await getDoc(docRef);
+    // return docSnap.data();,
+    const data = {...docSnap.data(),rounds :JSON.parse(docSnap.data().rounds), players : JSON.parse(docSnap.data().players)}
+    let res : boolean = false
+
+
+    Tournament.set(data as TournamentType)
 }
 
 const drawAndRemoveFromWaitingPlayers = () : PlayerType =>{
