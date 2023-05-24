@@ -1,9 +1,10 @@
-import type { PlayerToAddType } from "../static/types"
-import { Players } from "../static/store"
+import type { PlayerToAddType, PlayerType } from "../static/types"
+import { Players, Tournament } from "../static/store"
 import { db } from "../static/firebase"
 import { deleteDoc,doc,setDoc,getDoc } from "firebase/firestore"
 import { PlayerStatus } from "../static/enums"
-
+import { get } from "svelte/store"
+import Player from "../components/Player.svelte"
 
 export const getPlayer = async(id: string) =>{
     const docRef = doc(db, "players", id);
@@ -42,4 +43,21 @@ export const addPlayer = async (player : PlayerToAddType) => {
     }).catch((error)=>{
         console.error("Error adding document: ", error);
     })
+}
+
+
+export const searchPhrase = (phrase : string, field : string) =>{
+    let data : PlayerType[] = get(Players)
+    if(!phrase) return null; 
+    else if(!field)
+    {
+        let res : PlayerType[] = []
+        const fields = ['id','name','surname','age','city']
+        for(const f of fields) {
+            const temp : PlayerType[] = data.filter((player : PlayerType) => (player[f]).toString().includes(phrase))  
+            res = [...res, ...temp]
+        }     
+        return res;
+    }
+    else return data.filter(player => player[field].includes(phrase))
 }

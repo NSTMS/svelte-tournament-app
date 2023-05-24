@@ -5,6 +5,7 @@ import { TournamentStatus } from "../static/enums";
 import {Players, TournamentPairs,Tournament } from "../static/store";
 import { QueryDocumentSnapshot, collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
 import { db } from "../static/firebase";
+import {isEqual} from 'lodash/isEqual';
 
 let playersWaitingForFirstGame : PlayerType[] = []
 export const createTournament = async (name : string, winPrize : number ) =>{
@@ -65,6 +66,7 @@ export const createTournament = async (name : string, winPrize : number ) =>{
         currentRound : 0,
     })
     await saveTournament()
+    console.log("no zapisałem")
 }
 
 const getWinnerFromPair = (players :  PlayerType[]) =>{
@@ -80,6 +82,7 @@ export const changeTournamentRound = async () =>{
     {
         const winner = getWinnerFromPair(get(Tournament).rounds[get(Tournament).currentRound][0][0].players)
         Tournament.update(tournament => ({...tournament, status : TournamentStatus.Finished, winner : winner.id }));
+        await saveTournament()
         return;
     } 
     
@@ -92,7 +95,8 @@ export const changeTournamentRound = async () =>{
             else roundWinners.push(getWinnerFromPair(match.players))
         });
     });      
-
+    await saveTournament()
+    
     if(get(Tournament).status == TournamentStatus.IncorrectlyFilled) return;
     
     let gamesInNextRound : TournamentPair[][] = get(Tournament).rounds[currentRound+1]
@@ -122,17 +126,27 @@ export const saveTournament = async () =>{
     await getTournament()
 } 
 export const getTournament = async () =>{
-    // dodaj sprawdzanie czy gracze zgadzają się
-
     const docRef = doc(db, "tournament", "tournament");
     const docSnap = await getDoc(docRef);
-    // return docSnap.data();,
     const data = {...docSnap.data(),rounds :JSON.parse(docSnap.data().rounds), players : JSON.parse(docSnap.data().players)}
-    let res : boolean = false
-
-
-    Tournament.set(data as TournamentType)
+    if(comparePlayers((data as TournamentType).players, get(Players)))
+    {
+        Tournament.set(data as TournamentType)
+        return true
+    }
+    else return null;
 }
+const comparePlayers = (a : PlayerType[],b : PlayerType[]) =>{
+
+    if (a.length !== b.length) {
+        return false;
+    }
+    return a.every((value, index) => {
+        console.log("--", value, "--", b[index])
+        return JSON.stringify(value) === JSON.stringify(b[index]
+    )});
+}
+
 
 const drawAndRemoveFromWaitingPlayers = () : PlayerType =>{
     let player : PlayerType = playersWaitingForFirstGame[Math.floor(Math.random() * playersWaitingForFirstGame.length)]

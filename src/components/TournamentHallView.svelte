@@ -2,7 +2,8 @@
   import { onMount } from "svelte";
   import { createTournament,changeTournamentRound,getPlayerById, getTournament } from "../functions/functions";
   import { Tournament } from "../static/store";
-  import { link } from "svelte-routing";
+  import { Link } from "svelte-routing";
+  import { TournamentStatus } from "../static/enums";
   let isLoading : boolean = true;
   let isStarted : boolean = false;
 
@@ -12,9 +13,16 @@
       if(c)
       {
         isLoading = true;
-        await getTournament()
-        isLoading = false;
-        isStarted = true;
+        const data = await getTournament()
+        if(data)
+        {
+          isLoading = false;
+          isStarted = true;
+        }
+        else{
+          alert("Nie można załadować turnieju")
+          isStarted = false;
+        }
       }
     })
   });
@@ -33,7 +41,7 @@
 
 </script>
 
-<a class="link add-button" href="/" use:link>back to main page</a>
+<Link class="link add-button" to={"/"}>back to main page</Link>
 <button on:click={startTournament}>start the tournament</button>
 {#if isStarted}
   {#if isLoading}
@@ -50,11 +58,12 @@
                 <h2>{game[0].round}</h2>
                 <div class="tournament-game-players">
                   {#each game[0].players as player}
+
                   {#if player}
-                  <div class="member">
-                    <span>{player.name} {player.surname}</span>
-                    <input type="number" name="score"  min="0"  id="score" disabled={$Tournament.currentRound !== i} bind:value={player.score}/>
-                  </div>
+                    <div class="member">
+                      <span>{player.name} {player.surname}</span>
+                      <input type="number" name="score"  min="0"  id="score" disabled={$Tournament.currentRound !== i ||  $Tournament.status == TournamentStatus.Finished} bind:value={player.score}/>
+                    </div>
                   {:else}
                     <div class="member">
                         <input type="number" disabled>
@@ -64,7 +73,7 @@
                 </div>
             </div>
             {/each}
-            {#if $Tournament.currentRound == i}
+            {#if $Tournament.currentRound == i &&  $Tournament.status !== TournamentStatus.Finished}
                 <button on:click={handleRoundSubmit}>submit round {i+1}</button>
             {/if}
           </div>

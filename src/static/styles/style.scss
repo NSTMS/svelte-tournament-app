@@ -9,6 +9,8 @@ table{
     border:none;
     border-collapse: collapse;
     outline: none;
+    // overflow: scroll;
+    // height:200px;
     & tr{
         border:0.15rem solid black;
         & td,th{
@@ -31,4 +33,10 @@ table{
 }
 .button{
     color:blue;
+}
+
+.search-bar-section{
+    display: flex;
+    justify-content: center;
+    gap:20px;
 }

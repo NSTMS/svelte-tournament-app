@@ -20,6 +20,9 @@
   },
   "dependencies": {
     "firebase": "^9.20.0",
+    "loadash": "^1.0.0",
+    "lodash": "^4.17.21",
+    "lodash-es": "^4.17.21",
     "sass": "^1.62.1",
     "svelte-routing": "^1.6.0"
   }
